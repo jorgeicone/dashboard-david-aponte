@@ -758,35 +758,78 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </div>
 
 <script>
-// ====== NAVIGATION ======
-const sections = document.querySelectorAll('section[data-section]');
-const navBtns = document.querySelectorAll('#nav button');
-const labels = ['Inicio','Lo que tienes','El espejo','Las 3 bombas','La oportunidad','El plan','Definiciones'];
-let current = 0;
+// ====== NAVIGATION (blindada) ======
+(function(){
+  const sections = document.querySelectorAll('section[data-section]');
+  const navBtns = document.querySelectorAll('#nav button');
+  const labels = ['Inicio','Lo que tienes','El espejo','Las 3 bombas','La oportunidad','El plan','Definiciones'];
+  let current = 0;
+  const total = sections.length;
 
-function go(i){
-  if(i < 0 || i >= sections.length) return;
-  sections.forEach(s => s.classList.remove('active'));
-  navBtns.forEach(b => b.classList.remove('active'));
-  sections[i].classList.add('active');
-  navBtns[i].classList.add('active');
-  current = i;
-  document.getElementById('progLabel').textContent = `${i+1} / 7 · ${labels[i]}`;
-  document.getElementById('progBar').style.width = `${((i+1)/7)*100}%`;
-  document.getElementById('prevBtn').disabled = i === 0;
-  document.getElementById('nextBtn').disabled = i === sections.length - 1;
-  window.scrollTo({top:0, behavior:'smooth'});
-  // Trigger charts if applicable
-  if(i === 2) renderWebChart();
-  if(i === 4) renderProjChart();
-}
-navBtns.forEach((b,i) => b.addEventListener('click', () => go(i)));
-document.getElementById('prevBtn').addEventListener('click', () => go(current-1));
-document.getElementById('nextBtn').addEventListener('click', () => go(current+1));
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'ArrowRight') go(current+1);
-  if(e.key === 'ArrowLeft') go(current-1);
-});
+  function go(i){
+    try {
+      if(i < 0) i = 0;
+      if(i >= total) i = total - 1;
+      sections.forEach(s => s.classList.remove('active'));
+      navBtns.forEach(b => b.classList.remove('active'));
+      sections[i].classList.add('active');
+      if(navBtns[i]) navBtns[i].classList.add('active');
+      current = i;
+      const progLabel = document.getElementById('progLabel');
+      const progBar = document.getElementById('progBar');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      if(progLabel) progLabel.textContent = (i+1) + ' / ' + total + ' · ' + labels[i];
+      if(progBar) progBar.style.width = (((i+1)/total)*100) + '%';
+      if(prevBtn) prevBtn.disabled = (i === 0);
+      if(nextBtn) nextBtn.disabled = (i === total - 1);
+      try { window.scrollTo({top:0, behavior:'smooth'}); } catch(e){ window.scrollTo(0,0); }
+      // Charts diferidos para no trabar la navegación
+      if(i === 2) setTimeout(safeRenderWebChart, 150);
+      if(i === 4) setTimeout(safeRenderProjChart, 150);
+    } catch(err){
+      console.error('Nav error:', err);
+    }
+  }
+
+  // Asignar handlers a botones del nav
+  navBtns.forEach((b,i) => {
+    b.addEventListener('click', function(e){ e.preventDefault(); go(i); });
+  });
+
+  // Botones prev/next
+  const prevBtnEl = document.getElementById('prevBtn');
+  const nextBtnEl = document.getElementById('nextBtn');
+  if(prevBtnEl) prevBtnEl.addEventListener('click', function(e){ e.preventDefault(); go(current - 1); });
+  if(nextBtnEl) nextBtnEl.addEventListener('click', function(e){ e.preventDefault(); go(current + 1); });
+
+  // Teclado
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(current+1); }
+    if(e.key === 'ArrowLeft' || e.key === 'PageUp')  { e.preventDefault(); go(current-1); }
+  });
+
+  // Touch swipe básico para móvil
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e){ touchStartX = e.changedTouches[0].screenX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    if(Math.abs(dx) > 70){
+      if(dx < 0) go(current+1); else go(current-1);
+    }
+  }, {passive:true});
+
+  // Render seguro de charts
+  function safeRenderWebChart(){
+    try { if(typeof Chart !== 'undefined') renderWebChart(); } catch(e){ console.error('webChart', e); }
+  }
+  function safeRenderProjChart(){
+    try { if(typeof Chart !== 'undefined') renderProjChart(); } catch(e){ console.error('projChart', e); }
+  }
+
+  // Expone go() globalmente por si acaso
+  window.dashGo = go;
+})();
 
 // ====== CHARTS ======
 let webChartInstance = null;
@@ -797,57 +840,4 @@ function renderWebChart(){
   webChartInstance = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['Marca / Branding', 'Profesionalismo', 'Calidad del Copy', 'Credibilidad', 'Conversión / UX', 'Promesa vs evidencia'],
-      datasets: [{
-        label: 'Puntaje actual',
-        data: [31, 38, 52, 55, 28, 55],
-        backgroundColor: 'rgba(255, 140, 0, 0.15)',
-        borderColor: '#ff8c00',
-        borderWidth: 2,
-        pointBackgroundColor: '#ff8c00',
-        pointBorderColor: '#fff',
-        pointRadius: 5
-      },{
-        label: 'Meta a 6 meses',
-        data: [78, 82, 80, 85, 80, 25],
-        backgroundColor: 'rgba(0, 212, 255, 0.1)',
-        borderColor: '#00d4ff',
-        borderWidth: 2,
-        borderDash: [6,4],
-        pointBackgroundColor: '#00d4ff',
-        pointBorderColor: '#fff',
-        pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#fff', font:{size:12, weight:'600'} } }
-      },
-      scales: {
-        r: {
-          angleLines: { color: 'rgba(255,255,255,.12)' },
-          grid: { color: 'rgba(255,255,255,.1)' },
-          pointLabels: { color: '#fff', font:{size:11, weight:'600'} },
-          ticks: { color: 'rgba(255,255,255,.5)', backdropColor: 'transparent', stepSize: 25 },
-          min: 0, max: 100
-        }
-      }
-    }
-  });
-}
-
-let projChartInstance = null;
-function renderProjChart(){
-  if(projChartInstance) return;
-  const ctx = document.getElementById('projChart');
-  if(!ctx) return;
-  projChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['Hoy', 'Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Mes 6'],
-      datasets: [{
-        label: 'Web',
-        data: [40, 53, 60, 67, 72, 76, 80],
-        borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.08)', tension:.4, bo
+      labels: ['Marca / Branding', 'Profesionalismo', 'Calidad del Copy', 'Credibilidad', 'Conve
