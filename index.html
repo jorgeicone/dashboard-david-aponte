@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>David Aponte — Diagnóstico Estratégico Integral | ICONE ialabs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy: #050d1f;
+  --navy-2: #0a1730;
+  --cyan: #00d4ff;
+  --purple: #7b2fff;
+  --orange: #ff8c00;
+  --green: #00d48a;
+  --red: #ff4757;
+  --yellow: #ffd54a;
+  --white: #ffffff;
+  --muted: rgba(255,255,255,.6);
+  --card: rgba(255,255,255,.04);
+  --border: rgba(0,212,255,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background: radial-gradient(ellipse at top, #0a1730 0%, #050d1f 60%);
+  color:var(--white);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100vh;
+  line-height:1.5;
+  overflow-x:hidden;
+}
+canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+
+/* TOPBAR */
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background: rgba(5,13,31,.85); backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0,212,255,.15);
+  padding: 14px 28px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.5px}
+.brand .dot{width:10px;height:10px;border-radius:50%; background:linear-gradient(135deg,var(--cyan),var(--purple)); box-shadow:0 0 14px var(--cyan)}
+.brand span{font-size:.95rem}
+.nav{display:flex; gap:6px; flex-wrap:wrap; justify-content:center}
+.nav button{
+  background:transparent; border:1px solid transparent; color:var(--muted);
+  padding:8px 14px; border-radius:50px; font-weight:600; font-size:.82rem;
+  cursor:pointer; transition:.2s; font-family:inherit;
+}
+.nav button:hover{color:#fff; background:rgba(0,212,255,.08)}
+.nav button.active{color:#fff; background:rgba(0,212,255,.15); border-color:var(--cyan)}
+.meta{font-size:.78rem; color:var(--muted); text-align:right}
+.meta strong{color:var(--cyan); font-weight:700}
+
+/* MAIN */
+main{position:relative; z-index:1; padding-top:80px}
+section{
+  min-height: calc(100vh - 80px);
+  padding: 60px 28px 80px;
+  max-width: 1180px;
+  margin: 0 auto;
+  display:none;
+  animation: fadeIn .55s ease;
+}
+section.active{display:block}
+@keyframes fadeIn{from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)}}
+
+.eyebrow{
+  display:inline-block; font-size:.75rem; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:var(--cyan); padding:6px 14px;
+  border:1px solid var(--border); border-radius:50px; background:rgba(0,212,255,.06);
+  margin-bottom:18px;
+}
+h1{font-size:clamp(2rem, 4.8vw, 3.6rem); font-weight:900; line-height:1.05; margin-bottom:18px}
+h2{font-size:clamp(1.4rem, 2.6vw, 2.1rem); font-weight:800; margin-bottom:14px}
+h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
+.lead{font-size:1.1rem; color:rgba(255,255,255,.75); max-width:760px; margin-bottom:32px}
+.gradient{
+  background: linear-gradient(135deg, var(--cyan) 10%, var(--purple) 50%, var(--orange) 90%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+
+/* CARDS GRID */
+.grid{display:grid; gap:18px}
+.grid-2{grid-template-columns:repeat(auto-fit, minmax(280px, 1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit, minmax(240px, 1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))}
+
+.card{
+  background: var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:24px;
+  transition:.25s;
+  position:relative;
+  overflow:hidden;
+}
+.card:hover{border-color: var(--cyan); transform:translateY(-3px); box-shadow:0 14px 40px rgba(0,212,255,.08)}
+.card .ic{font-size:1.7rem; margin-bottom:8px; display:block}
+.card .score{font-size:2.6rem; font-weight:900; line-height:1; margin:6px 0}
+.card p{color:var(--muted); font-size:.92rem}
+
+/* SCORE COLORS */
+.s-red{color:var(--red)}
+.s-orange{color:var(--orange)}
+.s-yellow{color:var(--yellow)}
+.s-green{color:var(--green)}
+.s-cyan{color:var(--cyan)}
+
+.bar{height:6px; background:rgba(255,255,255,.08); border-radius:50px; overflow:hidden; margin-top:10px}
+.bar > div{height:100%; border-radius:50px; transition:width 1s ease}
+.b-red > div{background: linear-gradient(90deg, var(--red), var(--orange))}
+.b-orange > div{background: linear-gradient(90deg, var(--orange), var(--yellow))}
+.b-yellow > div{background: linear-gradient(90deg, var(--yellow), var(--green))}
+.b-green > div{background: linear-gradient(90deg, var(--green), var(--cyan))}
+.b-cyan > div{background: linear-gradient(90deg, var(--cyan), var(--purple))}
+
+/* COVER */
+.cover-wrap{display:grid; grid-template-columns: 1.2fr 1fr; gap:50px; align-items:center; min-height:70vh}
+@media(max-width:880px){.cover-wrap{grid-template-columns:1fr}}
+.score-hero{
+  background: radial-gradient(circle at 50% 30%, rgba(255,140,0,.18) 0%, transparent 70%);
+  border:1.5px solid rgba(255,140,0,.35);
+  border-radius:30px;
+  padding:50px 40px;
+  text-align:center;
+  position:relative;
+}
+.score-hero .big{
+  font-size: clamp(6rem, 16vw, 11rem); font-weight:900; line-height:.9;
+  background: linear-gradient(135deg, var(--orange), var(--red));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.score-hero .label{color:var(--muted); font-size:.9rem; letter-spacing:2px; text-transform:uppercase}
+.score-hero .verdict{
+  display:inline-block; margin-top:18px; padding:8px 18px; border-radius:50px;
+  background:rgba(255,140,0,.12); border:1px solid var(--orange); color:var(--orange);
+  font-weight:700; font-size:.85rem; letter-spacing:.5px;
+}
+
+/* TIMELINE */
+.timeline{position:relative; padding-left:30px; margin-top:30px}
+.timeline::before{content:''; position:absolute; left:8px; top:8px; bottom:8px; width:2px; background:linear-gradient(180deg, var(--cyan), var(--purple), var(--orange))}
+.t-item{position:relative; margin-bottom:26px; padding-left:22px}
+.t-item::before{content:''; position:absolute; left:-30px; top:6px; width:18px; height:18px; border-radius:50%; background:var(--navy); border:3px solid var(--cyan); box-shadow:0 0 12px var(--cyan)}
+.t-item .t-tag{color:var(--cyan); font-size:.75rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase}
+.t-item h3{margin:4px 0 6px}
+.t-item p{color:var(--muted); font-size:.93rem}
+
+/* PROGRESS PRESENTATION */
+.progress-strip{
+  position:fixed; bottom:0; left:0; right:0; z-index:99;
+  background: rgba(5,13,31,.92); backdrop-filter: blur(10px);
+  border-top:1px solid rgba(0,212,255,.15);
+  padding:10px 28px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  font-size:.78rem; color:var(--muted);
+}
+.progress-strip .bar-mini{flex:1; max-width:320px; height:4px; background:rgba(255,255,255,.1); border-radius:50px; overflow:hidden}
+.progress-strip .bar-mini > div{height:100%; background:linear-gradient(90deg, var(--cyan), var(--purple)); transition:.4s}
+.progress-strip .navbtn{
+  background: rgba(0,212,255,.1); border:1px solid var(--cyan); color:var(--cyan);
+  padding:7px 16px; border-radius:50px; cursor:pointer; font-weight:600; font-size:.78rem; font-family:inherit;
+  transition:.2s;
+}
+.progress-strip .navbtn:hover{background:rgba(0,212,255,.25)}
+.progress-strip .navbtn:disabled{opacity:.3; cursor:not-allowed}
+
+/* BOMBA CARDS */
+.bomba{
+  background: linear-gradient(135deg, rgba(255,71,87,.08), rgba(255,140,0,.05));
+  border:1.5px solid rgba(255,71,87,.4);
+  border-radius:18px;
+  padding:24px;
+  position:relative;
+}
+.bomba .badge{
+  position:absolute; top:-12px; left:20px;
+  background:var(--red); color:#fff; padding:4px 12px; border-radius:50px;
+  font-size:.72rem; font-weight:800; letter-spacing:1px;
+}
+.bomba h3{color:var(--red); margin-top:8px}
+.bomba .fix{
+  margin-top:14px; padding:12px 14px; background:rgba(0,212,138,.08);
+  border-left:3px solid var(--green); border-radius:6px;
+  font-size:.88rem; color:rgba(255,255,255,.85);
+}
+.bomba .fix strong{color:var(--green)}
+
+/* ASSET CARD */
+.asset{
+  background: linear-gradient(135deg, rgba(0,212,138,.06), rgba(0,212,255,.04));
+  border:1.5px solid rgba(0,212,138,.35);
+  border-radius:16px;
+  padding:20px;
+}
+.asset h3{color:var(--green); display:flex; align-items:center; gap:8px}
+
+/* MONTH CARDS */
+.month-card{
+  background:var(--card);
+  border:1.5px solid var(--border);
+  border-radius:18px;
+  padding:24px;
+  position:relative;
+  transition:.3s;
+}
+.month-card:hover{border-color:var(--purple); transform:translateY(-4px)}
+.month-card .num{
+  position:absolute; top:-18px; right:18px;
+  width:50px; height:50px; border-radius:50%;
+  background:linear-gradient(135deg, var(--cyan), var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:1.2rem; box-shadow:0 6px 20px rgba(123,47,255,.4);
+}
+.month-card .focus{font-size:.72rem; color:var(--cyan); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px}
+.month-card h3{font-size:1.15rem; margin-bottom:12px}
+.month-card ul{list-style:none; padding:0; margin-top:8px}
+.month-card li{font-size:.88rem; color:var(--muted); padding:5px 0 5px 18px; position:relative}
+.month-card li::before{content:'▸'; position:absolute; left:0; color:var(--cyan)}
+
+/* DECISION CARDS */
+.decision{
+  background: rgba(123,47,255,.06);
+  border:1.5px dashed rgba(123,47,255,.5);
+  border-radius:16px;
+  padding:22px;
+  transition:.25s;
+}
+.decision:hover{background:rgba(123,47,255,.12); border-style:solid}
+.decision .q-num{
+  display:inline-block; width:32px; height:32px; line-height:32px; text-align:center;
+  border-radius:50%; background:var(--purple); font-weight:900; margin-bottom:10px;
+}
+.decision h3{color:var(--white)}
+.decision .opt{
+  display:block; margin-top:8px; padding:8px 12px;
+  background:rgba(255,255,255,.04); border-radius:8px;
+  font-size:.88rem; color:var(--muted);
+  border-left:2px solid var(--purple);
+}
+
+/* STATS */
+.stat-row{display:flex; gap:24px; flex-wrap:wrap; margin:24px 0}
+.stat{
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:18px 22px; flex:1; min-width:180px;
+}
+.stat .v{font-size:1.9rem; font-weight:900; line-height:1}
+.stat .l{font-size:.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:6px}
+
+/* THERMOMETER */
+.thermo{
+  height:18px; border-radius:50px;
+  background: linear-gradient(90deg, var(--green) 0%, var(--yellow) 50%, var(--red) 100%);
+  position:relative; margin:30px 0 12px;
+}
+.thermo .arrow{
+  position:absolute; top:-22px; transform:translateX(-50%);
+  font-size:1.3rem; color:#fff;
+}
+.thermo-labels{display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); margin-bottom:20px}
+
+/* CHART CONTAINER */
+.chart-wrap{
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:22px; margin:18px 0;
+}
+.chart-wrap canvas{max-height:330px}
+
+/* QUOTE */
+.quote{
+  border-left:3px solid var(--cyan);
+  padding:14px 22px;
+  background:rgba(0,212,255,.04);
+  border-radius:0 10px 10px 0;
+  margin:20px 0;
+  font-style:italic;
+  color:rgba(255,255,255,.85);
+}
+
+/* TEAM */
+.team-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; margin-top:24px}
+@media(max-width:760px){.team-row{grid-template-columns:1fr}}
+.team-card{
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:24px; text-align:center;
+}
+.team-card .avatar{
+  width:64px; height:64px; border-radius:50%;
+  background:linear-gradient(135deg, var(--cyan), var(--purple));
+  margin:0 auto 12px; display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:1.4rem;
+}
+.team-card h3{font-size:1.05rem; margin-bottom:4px}
+.team-card .role{color:var(--cyan); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1px}
+.team-card p{font-size:.85rem; color:var(--muted); margin-top:10px}
+
+/* FOOTER CTA */
+.cta-box{
+  background: linear-gradient(135deg, rgba(0,212,255,.1), rgba(123,47,255,.1));
+  border:1.5px solid var(--cyan);
+  border-radius:20px;
+  padding:32px;
+  text-align:center;
+  margin-top:36px;
+}
+.cta-box h3{font-size:1.5rem; margin-bottom:8px}
+.cta-box p{color:var(--muted); max-width:600px; margin:0 auto}
+
+@media(max-width:680px){
+  .topbar{padding:10px 14px; flex-wrap:wrap}
+  .nav{order:3; width:100%; justify-content:flex-start; gap:4px}
+  .nav button{padding:6px 10px; font-size:.74rem}
+  .meta{display:none}
+  section{padding:30px 18px 100px}
+  .progress-strip{padding:8px 14px; flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <span>ICONE <strong style="color:var(--cyan)">ialabs</strong></span>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-i="0" class="active">Inicio</button>
+    <button data-i="1">Lo que tienes</button>
+    <button data-i="2">El espejo</button>
+    <button data-i="3">Las 3 bombas</button>
+    <button data-i="4">La oportunidad</button>
+    <button data-i="5">El plan</button>
+    <button data-i="6">Definiciones</button>
+  </nav>
+  <div class="meta">
+    Diagnóstico estratégico<br><strong>22 may 2026</strong>
+  </div>
+</header>
+
+<main>
+
+<!-- ================== 0. COVER ================== -->
+<section class="active" data-section="0">
+  <div class="cover-wrap">
+    <div>
+      <span class="eyebrow">Sesión de mentoría · 30 min</span>
+      <h1>David, lo que sigue <span class="gradient">no es un veredicto.</span></h1>
+      <p class="lead">Es un mapa. Lo que ves hoy es el resultado de 15 años de trabajo real con una ejecución digital que se quedó atrás. Vamos a pasar por tres momentos: lo que está urgente, lo que se puede revertir y cómo lo vamos a construir contigo.</p>
+
+      <div class="stat-row">
+        <div class="stat"><div class="v gradient">4</div><div class="l">Canales analizados</div></div>
+        <div class="stat"><div class="v gradient">17</div><div class="l">Hallazgos críticos</div></div>
+        <div class="stat"><div class="v gradient">6</div><div class="l">Meses de plan</div></div>
+      </div>
+
+      <div class="quote">
+        "Tienes una vitrina perfectamente iluminada en una calle por donde no pasa nadie. El problema no es la vitrina — es que hoy nadie sabe que existe."
+      </div>
+    </div>
+
+    <div class="score-hero">
+      <div class="label">Puntaje promedio</div>
+      <div class="big">50</div>
+      <div style="font-size:1.4rem; font-weight:700; opacity:.6">/ 100</div>
+      <div class="verdict">Potencial real · Ejecución a medias</div>
+      <div style="margin-top:24px; font-size:.85rem; color:var(--muted); line-height:1.5">
+        Promedio ponderado de Web (42), LinkedIn (55),<br>Instagram (38) y Performance Técnico (65).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================== 1. LO QUE TIENES ================== -->
+<section data-section="1">
+  <span class="eyebrow">Empezamos por aquí</span>
+  <h1>Lo que <span class="gradient">sí tienes</span> a tu favor.</h1>
+  <p class="lead">Antes de cualquier diagnóstico crítico, esto es lo que es real, verificable y construible. La base que vamos a usar como plataforma de lanzamiento.</p>
+
+  <div class="grid grid-2">
+    <div class="asset">
+      <h3>🎓 Credenciales institucionales reales</h3>
+      <p style="color:var(--muted); margin-top:8px">Contador de la Javeriana. Columnista del Diario Portafolio. Mentor en iNNpulsa Colombia. Trabajos con Coomeva. Cámara de Comercio del Casanare. <strong style="color:var(--white)">Esto vale más que cualquier testimonio de WhatsApp.</strong></p>
+    </div>
+    <div class="asset">
+      <h3>📖 Historia personal concreta y verificable</h3>
+      <p style="color:var(--muted); margin-top:8px">32 años, 15 años de proceso, corporaciones reales. La narrativa de "salí del sistema corporativo para construir libertad financiera" es coherente y vendible.</p>
+    </div>
+    <div class="asset">
+      <h3>🎯 Nicho con demanda probada</h3>
+      <p style="color:var(--muted); margin-top:8px">Finanzas personales en Colombia es uno de los mercados de educación digital más activos. No tienes que crear el deseo: ya existe.</p>
+    </div>
+    <div class="asset">
+      <h3>💬 Testimonios de personas reales</h3>
+      <p style="color:var(--muted); margin-top:8px">Tienes casos verificables. Cuando los presentemos con apellidos, contexto y resultados específicos, dejarán de ser "tres frases sueltas" y empezarán a vender.</p>
+    </div>
+    <div class="asset">
+      <h3>🛠️ Infraestructura técnica funcional</h3>
+      <p style="color:var(--muted); margin-top:8px">SEO técnico en 92/100. PageSpeed Desktop en 85. La base técnica ya está. No hay que rehacer el sitio — hay que llenarlo de contenido y arreglar las fugas.</p>
+    </div>
+    <div class="asset">
+      <h3>🤝 Red latente ya conectada</h3>
+      <p style="color:var(--muted); margin-top:8px">@alejoacosta.inn y @experienciasimone te siguen en Instagram. Tienes 2.604 seguidores en LinkedIn. La red existe — está dormida, pero existe.</p>
+    </div>
+  </div>
+
+  <div class="cta-box" style="margin-top:36px">
+    <h3>El punto importante</h3>
+    <p>No vamos a construir desde cero. Vamos a <strong style="color:var(--cyan)">poner en valor</strong> activos que ya existen y que hoy no están trabajando para ti.</p>
+  </div>
+</section>
+
+<!-- ================== 2. EL ESPEJO ================== -->
+<section data-section="2">
+  <span class="eyebrow">El espejo · sin filtros</span>
+  <h1>Esto es lo que <span class="gradient">muestra el mercado</span> cuando te busca.</h1>
+  <p class="lead">Cuatro canales analizados con marcos profesionales de marca, conversión, autoridad y performance técnico. Cada uno calificado de 1 a 100.</p>
+
+  <div class="grid grid-4" style="margin-bottom:32px">
+    <div class="card">
+      <span class="ic">🌐</span>
+      <h3>Web</h3>
+      <div class="score s-orange">42<span style="font-size:1rem;opacity:.5">/100</span></div>
+      <div class="bar b-orange"><div style="width:42%"></div></div>
+      <p style="margin-top:10px">Plantilla Elementor, errores de copy, fragmentación de dominios, conversión rota.</p>
+    </div>
+    <div class="card">
+      <span class="ic">💼</span>
+      <h3>LinkedIn</h3>
+      <div class="score s-yellow">55<span style="font-size:1rem;opacity:.5">/100</span></div>
+      <div class="bar b-yellow"><div style="width:55%"></div></div>
+      <p style="margin-top:10px">Trayectoria real subutilizada. AMV vencida. Video animado en Destacado.</p>
+    </div>
+    <div class="card">
+      <span class="ic">📱</span>
+      <h3>Instagram</h3>
+      <div class="score s-red">38<span style="font-size:1rem;opacity:.5">/100</span></div>
+      <div class="bar b-red"><div style="width:38%"></div></div>
+      <p style="margin-top:10px">107 posts, 735 seguidores. El algoritmo no distribuye. Sin colaboraciones.</p>
+    </div>
+    <div class="card">
+      <span class="ic">⚡</span>
+      <h3>Performance</h3>
+      <div class="score s-green">65<span style="font-size:1rem;opacity:.5">/100</span></div>
+      <div class="bar b-green"><div style="width:65%"></div></div>
+      <p style="margin-top:10px">SEO técnico 92, pero "no hay datos de usuarios reales": nadie llega.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:30px">Termómetro de <span class="gradient">vende humo</span></h2>
+  <p style="color:var(--muted); margin-bottom:8px">Escala: 0 = honesto puro · 100 = engaño claro. David marca <strong style="color:var(--orange)">55</strong> — zona de "exageración moderada". No es fraude, pero las promesas superan la evidencia presentada.</p>
+
+  <div class="thermo">
+    <div class="arrow" style="left:55%">▼</div>
+  </div>
+  <div class="thermo-labels">
+    <span>Honesto (0)</span><span>Exagerado (50)</span><span>Engañoso (100)</span>
+  </div>
+
+  <div class="chart-wrap">
+    <h3 style="margin-bottom:12px">Desglose de la web por dimensión</h3>
+    <canvas id="webChart"></canvas>
+  </div>
+
+  <div class="quote">
+    Tienes capacidad para llegar a 75-80 en los cuatro canales en 6 meses. Pero hoy, si un prospecto frío busca tu nombre, esto es lo que encuentra.
+  </div>
+</section>
+
+<!-- ================== 3. LAS 3 BOMBAS ================== -->
+<section data-section="3">
+  <span class="eyebrow">Lo que debe pasar esta semana</span>
+  <h1>Las 3 bombas que hay que <span class="gradient">desactivar hoy</span>.</h1>
+  <p class="lead">No son optimizaciones. Son emergencias que están destruyendo activamente tu credibilidad cada día que pasan sin resolver.</p>
+
+  <div class="grid grid-2" style="margin-top:32px">
+    <div class="bomba">
+      <span class="badge">BOMBA 1 · URGENTE</span>
+      <h3>Texto de plantilla en inglés</h3>
+      <p style="color:var(--muted); margin-top:8px">En la página del curso (sección "Seguimiento personalizado") hay un párrafo de demo de Elementor: <em style="color:var(--white)">"As a qualified teacher, clinical hypnotherapist, counsellor and Reiki Master Teacher..."</em> Un prospecto que llegue al precio de $3.300.000 COP y lea esto, cierra la pestaña.</p>
+      <div class="fix"><strong>Fix hoy:</strong> Borrar y reemplazar con descripción real del seguimiento que ofreces. <strong>Tiempo: 5 minutos.</strong></div>
+    </div>
+
+    <div class="bomba">
+      <span class="badge">BOMBA 2 · LEGAL</span>
+      <h3>Certificación AMV vencida hace 2 años</h3>
+      <p style="color:var(--muted); margin-top:8px">El Autorregulador del Mercado de Valores de Colombia exige certificación vigente para asesorar inversiones. La tuya está vencida desde junio 2023. Si recomiendas dónde invertir — que es exactamente lo que vende el curso — esto es un problema regulatorio real, no solo de imagen.</p>
+      <div class="fix"><strong>Fix esta semana:</strong> O renovar AMV, o eliminar/matizar todo el lenguaje sobre "recomendar dónde invertir" en web, LinkedIn y curso.</div>
+    </div>
+
+    <div class="bomba">
+      <span class="badge">BOMBA 3 · MARCA</span>
+      <h3>Falso lead magnet: el "diagnóstico gratuito"</h3>
+      <p style="color:var(--muted); margin-top:8px">Lo llamas diagnóstico, pero es un formulario para agendar una cita. El usuario llega esperando un análisis y se va con una solicitud de datos. Eso destruye confianza y alimenta exactamente la percepción de "vende humo" que estamos tratando de revertir.</p>
+      <div class="fix"><strong>Fix mes 1:</strong> Construir un diagnóstico real de 8 preguntas con resultado inmediato. El prospecto recibe su nivel y su primer paso sin hablar con nadie. <em>Después</em> agenda.</div>
+    </div>
+
+    <div class="bomba">
+      <span class="badge">BOMBA 4 · LINKEDIN</span>
+      <h3>Video de GoAnimate en sección Destacado</h3>
+      <p style="color:var(--muted); margin-top:8px">El primer activo que ve cualquier prospecto en LinkedIn es un video de animación tipo juguete. Para un mentor de finanzas que cobra millones, esto es como tener una foto de perfil de cumpleaños infantil.</p>
+      <div class="fix"><strong>Fix esta semana:</strong> Reemplazar con video propio en cámara, hablando 60 segundos sobre tu propuesta de valor. Sin animaciones.</div>
+    </div>
+  </div>
+
+  <div class="cta-box" style="margin-top:32px; border-color:var(--red); background:linear-gradient(135deg, rgba(255,71,87,.08), rgba(255,140,0,.05))">
+    <h3 style="color:var(--red)">El costo de no hacerlo</h3>
+    <p>Cada semana que las bombas siguen activas, estás pagando con prospectos que llegan, ven la inconsistencia y se van sin saber por qué. Tu boca a boca no compensa esto — porque el prospecto te buscó en Google <em>antes</em> de llamarte.</p>
+  </div>
+</section>
+
+<!-- ================== 4. LA OPORTUNIDAD ================== -->
+<section data-section="4">
+  <span class="eyebrow">Por qué esto se puede revertir</span>
+  <h1>La buena noticia: <span class="gradient">esto no es un negocio nuevo.</span></h1>
+  <p class="lead">Es un negocio existente con fugas. Y las fugas se tapan. El motor del negocio — tu conocimiento, tu trayectoria, tu nicho — ya está. Solo hay que conectar lo que ya tienes con quien lo necesita.</p>
+
+  <div class="chart-wrap">
+    <h3 style="margin-bottom:12px">Proyección: dónde puedes estar en 6 meses</h3>
+    <canvas id="projChart"></canvas>
+  </div>
+
+  <h2 style="margin-top:36px">Lo que está pasando hoy con tu conversión</h2>
+  <p style="color:var(--muted); margin-bottom:24px">Esto es lo que probablemente está ocurriendo en tu negocio hoy, basado en lo que muestran los datos:</p>
+
+  <div class="grid grid-2">
+    <div class="card" style="border-color:rgba(255,71,87,.3)">
+      <span class="ic">📉</span>
+      <h3>Estás sobreviviendo de boca a boca</h3>
+      <p>Tu ecosistema digital no te genera leads frescos. Los prospectos llegan por referidos directos o eventos. Tu canal digital no es un canal — es una vitrina decorativa.</p>
+    </div>
+    <div class="card" style="border-color:rgba(255,71,87,.3)">
+      <span class="ic">⏱️</span>
+      <h3>Negocio de tiempo por dinero disfrazado</h3>
+      <p>Aunque vendes un "curso", cada venta requiere que tú estés cerrándola personalmente. No tienes funnel automatizado. Si paras una semana, paras el ingreso.</p>
+    </div>
+    <div class="card" style="border-color:rgba(255,71,87,.3)">
+      <span class="ic">💸</span>
+      <h3>Tráfico desperdiciado</h3>
+      <p>Los pocos que llegan se encuentran con un sitio que no convierte: texto en inglés, precio sin valor previo, dominios fragmentados, sin FAQ. Se van.</p>
+    </div>
+    <div class="card" style="border-color:rgba(255,71,87,.3)">
+      <span class="ic">🔁</span>
+      <h3>El algoritmo te ignora</h3>
+      <p>107 publicaciones en Instagram para 735 seguidores significa que IG dejó de mostrar tu contenido hace tiempo. No es por ti — es por la estructura de los posts. Es reversible.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Activos ocultos que vamos a poner en juego</h2>
+  <div class="grid grid-3" style="margin-top:18px">
+    <div class="asset">
+      <h3>🏛️ iNNpulsa Colombia</h3>
+      <p style="color:var(--muted); margin-top:8px">No aparece en ningún lado de tu web. Es de los activos institucionales más fuertes que tienes.</p>
+    </div>
+    <div class="asset">
+      <h3>📰 Diario Portafolio</h3>
+      <p style="color:var(--muted); margin-top:8px">Columnista. Eso es prensa nacional. Hoy no genera tráfico ni autoridad porque no se ve.</p>
+    </div>
+    <div class="asset">
+      <h3>🤝 Red de influencers</h3>
+      <p style="color:var(--muted); margin-top:8px">Una sola colaboración con @alejoacosta.inn vale más que 50 reels solos. Está a un mensaje de distancia.</p>
+    </div>
+  </div>
+
+  <div class="quote" style="margin-top:32px">
+    Lo más difícil de tu negocio — la credibilidad real, la trayectoria, el conocimiento — ya está hecho. Lo que falta es la parte sistemática. Y eso es exactamente lo que sabemos construir.
+  </div>
+</section>
+
+<!-- ================== 5. EL PLAN ================== -->
+<section data-section="5">
+  <span class="eyebrow">Acompañamiento estratégico · 6 meses</span>
+  <h1>El <span class="gradient">camino claro</span> hacia 75-80/100.</h1>
+  <p class="lead">No es una lista de tareas. Es una arquitectura por fases, con un equipo definido y entregables claros mes a mes.</p>
+
+  <h2 style="margin-top:30px">Equipo de acompañamiento</h2>
+  <div class="team-row">
+    <div class="team-card">
+      <div class="avatar">D</div>
+      <h3>David Aponte</h3>
+      <div class="role">Protagonista</div>
+      <p>Dueño del conocimiento, voz de marca, decisor final. Su tiempo está protegido: 2 sesiones de 90 min al mes.</p>
+    </div>
+    <div class="team-card">
+      <div class="avatar" style="background:linear-gradient(135deg, var(--orange), var(--purple))">J</div>
+      <h3>Jorge Pérez · ICONE</h3>
+      <div class="role">Marca · Digital · Estrategia</div>
+      <p>Liderazgo del acompañamiento integral: marca, web, contenido, conversión, presencia digital, ejecución técnica.</p>
+    </div>
+    <div class="team-card">
+      <div class="avatar" style="background:linear-gradient(135deg, var(--green), var(--cyan))">M</div>
+      <h3>Metodóloga (por integrar)</h3>
+      <div class="role">Diseño Instruccional</div>
+      <p>Se suma al equipo para profesionalizar la metodología pedagógica del curso, evaluación de aprendizajes y experiencia del estudiante.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Roadmap por fases</h2>
+  <div class="grid grid-2" style="margin-top:24px">
+    <div class="month-card">
+      <div class="num">1</div>
+      <div class="focus">Mes 1 · Emergencias</div>
+      <h3>Detener la sangría</h3>
+      <ul>
+        <li>Eliminar texto en inglés y unificar dominios</li>
+        <li>Definir estado AMV (renovar o ajustar lenguaje)</li>
+        <li>Reemplazar video de GoAnimate en LinkedIn</li>
+        <li>Auditoría completa de copy en producción</li>
+      </ul>
+    </div>
+    <div class="month-card">
+      <div class="num">2</div>
+      <div class="focus">Mes 2 · Identidad</div>
+      <h3>Construir la marca</h3>
+      <ul>
+        <li>Sistema visual: logo, paleta, tipografía</li>
+        <li>Manual de marca compacto (1 página)</li>
+        <li>Reescritura del about, propuesta de valor</li>
+        <li>Foto de perfil profesional + plantillas IG</li>
+      </ul>
+    </div>
+    <div class="month-card">
+      <div class="num">3</div>
+      <div class="focus">Mes 3 · Contenido</div>
+      <h3>Atraer tráfico real</h3>
+      <ul>
+        <li>Plan editorial blog + LinkedIn + Reels</li>
+        <li>Construcción del diagnóstico real (lead magnet)</li>
+        <li>2 colaboraciones estratégicas activadas</li>
+        <li>Posicionamiento de 3 keywords financieras</li>
+      </ul>
+    </div>
+    <div class="month-card">
+      <div class="num">4</div>
+      <div class="focus">Mes 4 · Conversión</div>
+      <h3>Convertir visitas en clientes</h3>
+      <ul>
+        <li>Rediseño de página del curso con escalera de valor</li>
+        <li>FAQ + testimonios verificables con apellidos</li>
+        <li>Embudo de email post-diagnóstico</li>
+        <li>A/B testing del CTA principal</li>
+      </ul>
+    </div>
+    <div class="month-card">
+      <div class="num">5</div>
+      <div class="focus">Mes 5 · Metodología</div>
+      <h3>Profesionalizar el curso (con metodóloga)</h3>
+      <ul>
+        <li>Rediseño curricular: objetivos, módulos, evaluación</li>
+        <li>Material descargable y guías</li>
+        <li>Sistema de seguimiento real (no aspiracional)</li>
+        <li>Documentación de la metodología propia</li>
+      </ul>
+    </div>
+    <div class="month-card">
+      <div class="num">6</div>
+      <div class="focus">Mes 6 · Escala</div>
+      <h3>Sistematizar y escalar</h3>
+      <ul>
+        <li>Lanzamiento de cohorte automatizada</li>
+        <li>Webinar evergreen funcionando</li>
+        <li>Dashboard de métricas mensual</li>
+        <li>Plan de los siguientes 6 meses</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta-box" style="margin-top:36px">
+    <h3>Compromiso del acompañamiento</h3>
+    <p>Tu tiempo está protegido. Decides, validas, grabas contenido. Nosotros ejecutamos, medimos y reportamos. Quincenal: sesión estratégica de 90 min. Semanal: avance documentado.</p>
+  </div>
+</section>
+
+<!-- ================== 6. DEFINICIONES ================== -->
+<section data-section="6">
+  <span class="eyebrow">Lo que sale de esta sesión</span>
+  <h1>Tres definiciones que <span class="gradient">cerramos hoy</span>.</h1>
+  <p class="lead">Para arrancar, necesitamos alinear estas tres cosas. No son detalles operativos — son las decisiones estructurales que orientan los siguientes 6 meses.</p>
+
+  <div class="grid grid-3" style="margin-top:32px">
+    <div class="decision">
+      <div class="q-num">1</div>
+      <h3>¿Cuál es el foco y la visión?</h3>
+      <p style="color:var(--muted); margin-top:10px; font-size:.92rem">¿Vamos a escalar el modelo digital para que el negocio crezca sin requerir más horas de David, o vamos a mantener un modelo boutique de alta cercanía y precio premium?</p>
+      <span class="opt"><strong style="color:var(--cyan)">Opción A:</strong> Escalar — automatizar funnel, cohortes, webinars evergreen</span>
+      <span class="opt"><strong style="color:var(--cyan)">Opción B:</strong> Premium boutique — pocos clientes, alto precio, alto contacto</span>
+      <span class="opt"><strong style="color:var(--cyan)">Opción C:</strong> Híbrido — entrada por curso digital, premium por mentoría 1:1</span>
+    </div>
+
+    <div class="decision">
+      <div class="q-num">2</div>
+      <h3>¿Dónde viven los cursos?</h3>
+      <p style="color:var(--muted); margin-top:10px; font-size:.92rem">Hoy no hay un repositorio profesional. ¿Construimos uno propio o usamos una plataforma externa (tipo Hotmart, Teachable, Thinkific)?</p>
+      <span class="opt"><strong style="color:var(--cyan)">Opción A:</strong> Hotmart — rápido, con pagos LATAM resueltos</span>
+      <span class="opt"><strong style="color:var(--cyan)">Opción B:</strong> LMS propio — control total, más inversión inicial</span>
+      <span class="opt"><strong style="color:var(--cyan)">Opción C:</strong> Plataforma híbrida — comunidad propia + alojamiento externo</span>
+    </div>
+
+    <div class="decision">
+      <div class="q-num">3</div>
+      <h3>¿Cuál es la metodología propia?</h3>
+      <p style="color:var(--muted); margin-top:10px; font-size:.92rem">Aquí entra la metodóloga. Necesitamos un sistema con nombre, fases y promesa clara. ¿Cuál es el "Método Aponte"? Sin esto, el curso compite por precio.</p>
+      <span class="opt"><strong style="color:var(--cyan)">A definir:</strong> Nombre del método</span>
+      <span class="opt"><strong style="color:var(--cyan)">A definir:</strong> Fases o pilares (3 a 5)</span>
+      <span class="opt"><strong style="color:var(--cyan)">A definir:</strong> Promesa medible al estudiante</span>
+    </div>
+  </div>
+
+  <h2 style="margin-top:48px; text-align:center">Lo que pasa cuando salgamos de esta reunión</h2>
+  <div class="timeline" style="max-width:720px; margin: 24px auto 0">
+    <div class="t-item">
+      <div class="t-tag">Hoy mismo</div>
+      <h3>David define foco, repositorio y nombre del método</h3>
+      <p>O nos da la información que necesita para definirlo en las próximas 48 horas.</p>
+    </div>
+    <div class="t-item">
+      <div class="t-tag">Esta semana</div>
+      <h3>Activamos plan de Mes 1 — emergencias</h3>
+      <p>Texto en inglés, video de LinkedIn, estado de AMV. Las tres bombas desactivadas antes del viernes.</p>
+    </div>
+    <div class="t-item">
+      <div class="t-tag">Semana siguiente</div>
+      <h3>Onboarding completo del equipo</h3>
+      <p>Sesión con metodóloga, alineación de calendarios, acceso a herramientas y documentos compartidos.</p>
+    </div>
+    <div class="t-item">
+      <div class="t-tag">Mes 1 cerrado</div>
+      <h3>Primer reporte de impacto</h3>
+      <p>Métricas de partida vs. post-emergencias. La marca empieza a verse coherente desde el primer mes.</p>
+    </div>
+  </div>
+
+  <div class="cta-box" style="margin-top:40px">
+    <h3 class="gradient">David, esto no es una venta. Es una invitación.</h3>
+    <p>Tenemos el diagnóstico, tenemos el equipo, tenemos el plan. Lo que sigue depende de una conversación: ¿Es el momento, somos el equipo, y cuál es el modelo que quieres construir? Esa conversación la abrimos hoy.</p>
+  </div>
+</section>
+
+</main>
+
+<div class="progress-strip">
+  <button class="navbtn" id="prevBtn">← Anterior</button>
+  <div style="display:flex; align-items:center; gap:12px; flex:1; justify-content:center">
+    <span id="progLabel">1 / 7 · Inicio</span>
+    <div class="bar-mini"><div id="progBar" style="width:14%"></div></div>
+  </div>
+  <button class="navbtn" id="nextBtn">Siguiente →</button>
+</div>
+
+<script>
+// ====== NAVIGATION ======
+const sections = document.querySelectorAll('section[data-section]');
+const navBtns = document.querySelectorAll('#nav button');
+const labels = ['Inicio','Lo que tienes','El espejo','Las 3 bombas','La oportunidad','El plan','Definiciones'];
+let current = 0;
+
+function go(i){
+  if(i < 0 || i >= sections.length) return;
+  sections.forEach(s => s.classList.remove('active'));
+  navBtns.forEach(b => b.classList.remove('active'));
+  sections[i].classList.add('active');
+  navBtns[i].classList.add('active');
+  current = i;
+  document.getElementById('progLabel').textContent = `${i+1} / 7 · ${labels[i]}`;
+  document.getElementById('progBar').style.width = `${((i+1)/7)*100}%`;
+  document.getElementById('prevBtn').disabled = i === 0;
+  document.getElementById('nextBtn').disabled = i === sections.length - 1;
+  window.scrollTo({top:0, behavior:'smooth'});
+  // Trigger charts if applicable
+  if(i === 2) renderWebChart();
+  if(i === 4) renderProjChart();
+}
+navBtns.forEach((b,i) => b.addEventListener('click', () => go(i)));
+document.getElementById('prevBtn').addEventListener('click', () => go(current-1));
+document.getElementById('nextBtn').addEventListener('click', () => go(current+1));
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowRight') go(current+1);
+  if(e.key === 'ArrowLeft') go(current-1);
+});
+
+// ====== CHARTS ======
+let webChartInstance = null;
+function renderWebChart(){
+  if(webChartInstance) return;
+  const ctx = document.getElementById('webChart');
+  if(!ctx) return;
+  webChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Marca / Branding', 'Profesionalismo', 'Calidad del Copy', 'Credibilidad', 'Conversión / UX', 'Nivel "vende humo"'],
+      datasets: [{
+        label: 'Puntaje actual',
+        data: [31, 38, 52, 55, 28, 55],
+        backgroundColor: 'rgba(255, 140, 0, 0.15)',
+        borderColor: '#ff8c00',
+        borderWidth: 2,
+        pointBackgroundColor: '#ff8c00',
+        pointBorderColor: '#fff',
+        pointRadius: 5
+      },{
+        label: 'Meta a 6 meses',
+        data: [78, 82, 80, 85, 80, 25],
+        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+        borderColor: '#00d4ff',
+        borderWidth: 2,
+        borderDash: [6,4],
+        pointBackgroundColor: '#00d4ff',
+        pointBorderColor: '#fff',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#fff', font:{size:12, weight:'600'} } }
+      },
+      scales: {
+        r: {
+          angleLines: { color: 'rgba(255,255,255,.12)' },
+          grid: { color: 'rgba(255,255,255,.1)' },
+          pointLabels: { color: '#fff', font:{size:11, weight:'600'} },
+          ticks: { color: 'rgba(255,255,255,.5)', backdropColor: 'transparent', stepSize: 25 },
+          min: 0, max: 100
+        }
+      }
+    }
+  });
+}
+
+let projChartInstance = null;
+function renderProjChart(){
+  if(projChartInstance) return;
+  const ctx = document.getElementById('projChart');
+  if(!ctx) return;
+  projChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Hoy', 'Mes 1', 'Mes 2', 'Mes 3', 'Mes 4', 'Mes 5', 'Mes 6'],
+      datasets: [{
+        label: 'Web',
+        data: [42, 55, 62, 68, 73, 76, 80],
+        borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.08)', tension:.4, borderWidth:3, fill:true
+      },{
+        label: 'LinkedIn',
+        data: [55, 60, 65, 70, 73, 76, 78],
+        borderColor: '#7b2fff', backgroundColor: 'rgba(123,47,255,.08)', tension:.4, borderWidth:3, fill:true
+      },{
+        label: 'Instagram',
+        data: [38, 42, 48, 55, 62, 70, 75],
+        borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.08)', tension:.4, borderWidth:3, fill:true
+      },{
+        label: 'Promedio',
+        data: [50, 56, 62, 67, 72, 76, 80],
+        borderColor: '#00d48a', borderWidth:4, borderDash:[8,4], tension:.4, fill:false, pointRadius:5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#fff', font:{size:12, weight:'600'} } },
+        tooltip: { backgroundColor:'#0a1730', borderColor:'#00d4ff', borderWidth:1, padding:12 }
+      },
+      scales: {
+        x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,.06)' } },
+        y: { ticks: { color: '#fff', callback:(v)=>v+'/100' }, grid: { color: 'rgba(255,255,255,.08)' }, min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+// ====== PARTICLES ======
+const canvas = document.getElementById('particles');
+const c = canvas.getContext('2d');
+let W, H, particles = [];
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+const colors = ['#00d4ff','#7b2fff','#ff8c00'];
+for(let i=0; i<48; i++){
+  particles.push({
+    x: Math.random()*W, y: Math.random()*H,
+    vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3,
+    r: Math.random()*2 + .8, c: colors[Math.floor(Math.random()*colors.length)],
+    a: Math.random()*.5 + .2
+  });
+}
+function tick(){
+  c.clearRect(0,0,W,H);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+    c.beginPath();
+    c.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    c.fillStyle = p.c;
+    c.globalAlpha = p.a;
+    c.shadowBlur = 12; c.shadowColor = p.c;
+    c.fill();
+  });
+  c.globalAlpha = 1; c.shadowBlur = 0;
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
