@@ -57,17 +57,17 @@ canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5
 .meta{font-size:.78rem; color:var(--muted); text-align:right}
 .meta strong{color:var(--cyan); font-weight:700}
 
-/* MAIN */
+/* MAIN — todas las secciones visibles, navegación por scroll */
 main{position:relative; z-index:1; padding-top:80px}
 section{
   min-height: calc(100vh - 80px);
-  padding: 60px 28px 80px;
+  padding: 60px 28px 90px;
   max-width: 1180px;
   margin: 0 auto;
-  display:none;
-  animation: fadeIn .55s ease;
+  scroll-margin-top: 80px;
+  border-bottom: 1px solid rgba(0,212,255,.06);
 }
-section.active{display:block}
+section:last-of-type{ border-bottom: none; }
 @keyframes fadeIn{from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)}}
 
 .eyebrow{
@@ -349,7 +349,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 <main>
 
 <!-- ================== 0. COVER ================== -->
-<section class="active" data-section="0">
+<section id="s0" data-section="0">
   <div class="cover-wrap">
     <div>
       <span class="eyebrow">Sesión exploratoria · 30 min</span>
@@ -380,7 +380,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 1. LO QUE TIENES ================== -->
-<section data-section="1">
+<section id="s1" data-section="1">
   <span class="eyebrow">Empezamos por aquí</span>
   <h1>Lo que <span class="gradient">sí tienes</span> a tu favor.</h1>
   <p class="lead">Antes de cualquier diagnóstico crítico, esto es lo que es real, verificable y construible. La base que vamos a usar como plataforma de lanzamiento.</p>
@@ -419,7 +419,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 2. EL ESPEJO ================== -->
-<section data-section="2">
+<section id="s2" data-section="2">
   <span class="eyebrow">El espejo · con respeto</span>
   <h1>Lo que <span class="gradient">se ve hoy</span> cuando alguien te busca.</h1>
   <p class="lead">Cuatro canales analizados con marcos profesionales de marca, conversión, autoridad y performance técnico. Cada uno con una calificación de 1 a 100. No es un veredicto — es un mapa de oportunidades.</p>
@@ -476,7 +476,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 3. LAS 3 BOMBAS ================== -->
-<section data-section="3">
+<section id="s3" data-section="3">
   <span class="eyebrow">Lo que vale la pena revisar primero</span>
   <h1>Cuatro temas que <span class="gradient">conviene atender pronto</span>.</h1>
   <p class="lead">No son catástrofes. Son detalles que están restando puntos a tu reputación digital cada semana que pasan sin ajuste. La buena noticia: tres de cuatro se resuelven en horas, no en meses.</p>
@@ -518,7 +518,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 4. LA OPORTUNIDAD ================== -->
-<section data-section="4">
+<section id="s4" data-section="4">
   <span class="eyebrow">Por qué esto se puede dar vuelta</span>
   <h1>La buena noticia: <span class="gradient">no es un negocio que empiece de cero.</span></h1>
   <p class="lead">Es un negocio en marcha con detalles por afinar. El motor — tu conocimiento, tu trayectoria, tu nicho — ya está. Lo que falta es conectar lo que ya tienes con quien lo necesita, y construir la arquitectura pedagógica que respalde la promesa.</p>
@@ -576,7 +576,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 5. EL PLAN ================== -->
-<section data-section="5">
+<section id="s5" data-section="5">
   <span class="eyebrow">Cómo se vería el acompañamiento · 6 meses</span>
   <h1>Un <span class="gradient">camino posible</span> hacia 75-80/100.</h1>
   <p class="lead">No es una propuesta cerrada — es un mapa de cómo se podría ver el proceso si decidimos caminar juntos. Una arquitectura por fases, con un equipo definido y entregables claros mes a mes.</p>
@@ -682,7 +682,7 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </section>
 
 <!-- ================== 6. DEFINICIONES ================== -->
-<section data-section="6">
+<section id="s6" data-section="6">
   <span class="eyebrow">Tres conversaciones que valen la pena</span>
   <h1>Lo que <span class="gradient">vale la pena pensar</span> después de esta sesión.</h1>
   <p class="lead">No hay nada que decidir hoy. Son tres preguntas estructurales que conviene tener claras — para ti mismo — antes de elegir cualquier camino. Las dejamos sobre la mesa para que sigan resonando.</p>
@@ -758,86 +758,93 @@ h3{font-size:1.2rem; font-weight:700; margin-bottom:10px}
 </div>
 
 <script>
-// ====== NAVIGATION (blindada) ======
+// ====== NAVIGATION por scroll — todas las secciones siempre visibles ======
 (function(){
   const sections = document.querySelectorAll('section[data-section]');
   const navBtns = document.querySelectorAll('#nav button');
   const labels = ['Inicio','Lo que tienes','El espejo','Las 3 bombas','La oportunidad','El plan','Definiciones'];
-  let current = 0;
   const total = sections.length;
+  let current = 0;
 
-  function go(i){
-    try {
-      if(i < 0) i = 0;
-      if(i >= total) i = total - 1;
-      sections.forEach(s => s.classList.remove('active'));
-      navBtns.forEach(b => b.classList.remove('active'));
-      sections[i].classList.add('active');
-      if(navBtns[i]) navBtns[i].classList.add('active');
-      current = i;
-      const progLabel = document.getElementById('progLabel');
-      const progBar = document.getElementById('progBar');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      if(progLabel) progLabel.textContent = (i+1) + ' / ' + total + ' · ' + labels[i];
-      if(progBar) progBar.style.width = (((i+1)/total)*100) + '%';
-      if(prevBtn) prevBtn.disabled = (i === 0);
-      if(nextBtn) nextBtn.disabled = (i === total - 1);
-      try { window.scrollTo({top:0, behavior:'smooth'}); } catch(e){ window.scrollTo(0,0); }
-      // Charts diferidos para no trabar la navegación
-      if(i === 2) setTimeout(safeRenderWebChart, 150);
-      if(i === 4) setTimeout(safeRenderProjChart, 150);
-    } catch(err){
-      console.error('Nav error:', err);
-    }
+  function scrollToSection(i){
+    if(i < 0) i = 0;
+    if(i >= total) i = total - 1;
+    const el = sections[i];
+    if(!el) return;
+    const y = el.getBoundingClientRect().top + window.pageYOffset - 70;
+    try { window.scrollTo({top:y, behavior:'smooth'}); }
+    catch(e){ window.scrollTo(0, y); }
   }
 
-  // Asignar handlers a botones del nav
+  function updateUI(i){
+    current = i;
+    navBtns.forEach(b => b.classList.remove('active'));
+    if(navBtns[i]) navBtns[i].classList.add('active');
+    const progLabel = document.getElementById('progLabel');
+    const progBar = document.getElementById('progBar');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    if(progLabel) progLabel.textContent = (i+1) + ' / ' + total + ' · ' + labels[i];
+    if(progBar) progBar.style.width = (((i+1)/total)*100) + '%';
+    if(prevBtn) prevBtn.disabled = (i === 0);
+    if(nextBtn) nextBtn.disabled = (i === total - 1);
+  }
+
+  // Botones del menú superior
   navBtns.forEach((b,i) => {
-    b.addEventListener('click', function(e){ e.preventDefault(); go(i); });
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      updateUI(i);
+      scrollToSection(i);
+    });
   });
 
   // Botones prev/next
   const prevBtnEl = document.getElementById('prevBtn');
   const nextBtnEl = document.getElementById('nextBtn');
-  if(prevBtnEl) prevBtnEl.addEventListener('click', function(e){ e.preventDefault(); go(current - 1); });
-  if(nextBtnEl) nextBtnEl.addEventListener('click', function(e){ e.preventDefault(); go(current + 1); });
+  if(prevBtnEl) prevBtnEl.addEventListener('click', function(e){
+    e.preventDefault();
+    const ni = Math.max(0, current - 1);
+    updateUI(ni); scrollToSection(ni);
+  });
+  if(nextBtnEl) nextBtnEl.addEventListener('click', function(e){
+    e.preventDefault();
+    const ni = Math.min(total - 1, current + 1);
+    updateUI(ni); scrollToSection(ni);
+  });
 
   // Teclado
   document.addEventListener('keydown', function(e){
-    if(e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(current+1); }
-    if(e.key === 'ArrowLeft' || e.key === 'PageUp')  { e.preventDefault(); go(current-1); }
+    if(e.key === 'ArrowDown' || e.key === 'PageDown') {
+      const ni = Math.min(total - 1, current + 1);
+      updateUI(ni); scrollToSection(ni);
+    }
+    if(e.key === 'ArrowUp' || e.key === 'PageUp')  {
+      const ni = Math.max(0, current - 1);
+      updateUI(ni); scrollToSection(ni);
+    }
   });
 
-  // Touch swipe básico para móvil
-  let touchStartX = 0;
-  document.addEventListener('touchstart', function(e){ touchStartX = e.changedTouches[0].screenX; }, {passive:true});
-  document.addEventListener('touchend', function(e){
-    const dx = e.changedTouches[0].screenX - touchStartX;
-    if(Math.abs(dx) > 70){
-      if(dx < 0) go(current+1); else go(current-1);
-    }
+  // Detectar sección visible al hacer scroll manual
+  function onScroll(){
+    const scrollPos = window.pageYOffset + 200;
+    let active = 0;
+    sections.forEach((s, i) => {
+      if(s.offsetTop <= scrollPos) active = i;
+    });
+    if(active !== current) updateUI(active);
+    // Render charts cuando son visibles
+    if(active === 2) setTimeout(safeRenderWebChart, 50);
+    if(active === 4) setTimeout(safeRenderProjChart, 50);
+  }
+  let scrollTimeout;
+  window.addEventListener('scroll', function(){
+    if(scrollTimeout) cancelAnimationFrame(scrollTimeout);
+    scrollTimeout = requestAnimationFrame(onScroll);
   }, {passive:true});
 
-  // Render seguro de charts
   function safeRenderWebChart(){
-    try { if(typeof Chart !== 'undefined') renderWebChart(); } catch(e){ console.error('webChart', e); }
+    try { if(typeof Chart !== 'undefined' && typeof renderWebChart === 'function') renderWebChart(); } catch(e){}
   }
   function safeRenderProjChart(){
-    try { if(typeof Chart !== 'undefined') renderProjChart(); } catch(e){ console.error('projChart', e); }
-  }
-
-  // Expone go() globalmente por si acaso
-  window.dashGo = go;
-})();
-
-// ====== CHARTS ======
-let webChartInstance = null;
-function renderWebChart(){
-  if(webChartInstance) return;
-  const ctx = document.getElementById('webChart');
-  if(!ctx) return;
-  webChartInstance = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: ['Marca / Branding', 'Profesionalismo', 'Calidad del Copy', 'Credibilidad', 'Conve
+    try { if(typeof Chart !==
